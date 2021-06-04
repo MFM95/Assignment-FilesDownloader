@@ -35,4 +35,5 @@ class JsonFileViewModel @Inject constructor(
             )
             .addTo(compositeDisposable)
     }
+
 }
