@@ -2,26 +2,28 @@ package com.filedownloader.data.source
 
 import android.app.Application
 import android.util.Log
-import java.io.BufferedReader
+import com.filedownloader.data.source.model.FileItem
+import com.google.gson.Gson
+import io.reactivex.Observable
+import io.reactivex.Single
 import java.io.IOException
 import java.io.InputStream
-import java.io.InputStreamReader
 import javax.inject.Inject
 
-class JSONFileDataSource @Inject constructor(private val application: Application) {
+class FileReaderDataSource @Inject constructor(private val application: Application) {
 
-    fun readFile(fileName: String) {
+    fun readFile(fileName: String): Observable<String> {
         var data: String? = ""
-        try {
+        return try {
             val stream: InputStream = application.assets.open(fileName)
             val size: Int = stream.available()
             val buffer = ByteArray(size)
             stream.read(buffer)
             stream.close()
             data = String(buffer)
-            Log.i("JSONFileDataSource", data.toString())
+            Observable.just(data)
         } catch (e: IOException) {
-            Log.i("JSONFileDataSource", e.localizedMessage)
+            Observable.error(e)
         }
 
     }

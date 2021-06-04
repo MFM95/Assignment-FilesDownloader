@@ -2,8 +2,8 @@ package com.filedownloader.core.di
 
 import android.app.Application
 import android.content.Context
-import com.filedownloader.data.repository.JsonFileRepositoryImpl
-import com.filedownloader.domain.repository.JsonFileRepository
+import com.filedownloader.data.repository.FileReaderReaderRepositoryImpl
+import com.filedownloader.domain.repository.FileReaderRepository
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -19,8 +19,8 @@ class AppModule {
 
 
     @Provides
-    fun provideVodRepository(jsonFileRepositoryImpl: JsonFileRepositoryImpl): JsonFileRepository =
-        jsonFileRepositoryImpl
+    fun provideVodRepository(fileReaderRepositoryImpl: FileReaderReaderRepositoryImpl): FileReaderRepository =
+        fileReaderRepositoryImpl
 
 
 

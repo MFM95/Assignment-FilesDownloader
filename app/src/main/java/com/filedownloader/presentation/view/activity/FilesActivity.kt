@@ -25,6 +25,7 @@ class FilesActivity : AppCompatActivity() {
         jsonFileViewModel.readFile(FILE_NAME)
     }
 
+
     companion object {
         private const val FILE_NAME = "getListOfFilesResponse.json"
     }

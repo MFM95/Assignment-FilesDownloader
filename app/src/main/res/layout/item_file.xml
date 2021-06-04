@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/ivFileType"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@mipmap/ic_video_file"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/tvFileName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@+id/ivFileType"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="10dp"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:text="File Name"
+        />
+
+    <TextView
+        android:id="@+id/tvFileUrl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@+id/ivFileType"
+        app:layout_constraintTop_toBottomOf="@+id/tvFileName"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="10dp"
+        android:singleLine="true"
+        android:ellipsize="start"
+        android:maxLength="40"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:text="https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
+        />
+
+    <View
+        android:id="@+id/viewDivider"
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:background="@color/black"
+        app:layout_constraintTop_toBottomOf="@+id/tvFileUrl"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="@+id/tvFileName"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
