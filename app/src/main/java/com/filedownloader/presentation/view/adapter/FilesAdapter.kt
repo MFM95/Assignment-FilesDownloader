@@ -39,9 +39,9 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 itemView.tvFileName.text = it.fileItem.name
                 itemView.tvFileUrl.text = it.fileItem.url
                 if (it.fileItem.type == FileTypeEnum.VIDEO)
-                    itemView.ivFileType.setImageResource(R.color.purple_700)
+                    itemView.ivFileType.setImageResource(R.drawable.ic_video_file)
                 else
-                    itemView.ivFileType.setImageResource(R.color.teal_700)
+                    itemView.ivFileType.setImageResource(R.drawable.ic_pdf_file)
             }
 
             if (position == items.size - 1) {
