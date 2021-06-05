@@ -8,6 +8,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.selection.SelectionPredicates
+import androidx.recyclerview.selection.SelectionTracker
+import androidx.recyclerview.selection.StableIdKeyProvider
+import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.downloader.OnDownloadListener
@@ -19,6 +23,7 @@ import com.filedownloader.core.openFile
 import com.filedownloader.presentation.uimodel.DownloadState
 import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
+import com.filedownloader.presentation.view.utils.MyItemKeyProvider
 import com.filedownloader.presentation.viewmodel.JsonFileViewModel
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_files.*
@@ -87,6 +92,33 @@ class FilesActivity : AppCompatActivity() {
             LinearLayoutManager.VERTICAL,
             false
         )
+        setSelectionTracker()
+        setItemClickListener()
+        (rvFilesList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+    }
+
+    private fun setSelectionTracker() {
+        val tracker = SelectionTracker.Builder<Long>(
+            "mySelection",
+            rvFilesList,
+            MyItemKeyProvider(rvFilesList),
+            FilesAdapter.MyItemDetailsLookup(rvFilesList),
+            StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(
+            SelectionPredicates.createSelectAnything()
+        ).build()
+        filesAdapter.tracker = tracker
+        tracker.addObserver(
+            object : SelectionTracker.SelectionObserver<Long>() {
+                override fun onSelectionChanged() {
+                    super.onSelectionChanged()
+                    Log.i("onSelectionChanged", tracker.selection.size().toString())
+                }
+            }
+        )
+    }
+
+    private fun setItemClickListener() {
         filesAdapter.onItemClicked.observe(this, {
             Log.i("onItemClicked", filesAdapter.items.indexOf(it).toString())
 //            val dirPath = filesDir.absolutePath + File.separator + "downloads"
@@ -97,12 +129,6 @@ class FilesActivity : AppCompatActivity() {
             startDownload(it.fileItem.url, dirPath, it.fileItem.name, filesAdapter.items.indexOf(it))
 
         })
-
-
-        /*** Turn off the item change animations,
-        / so that recyclerView items will be updated without any flashing/jumping,
-        ****/
-        (rvFilesList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     private fun startDownload(url: String, dirPath: String, fileName: String, position: Int) {

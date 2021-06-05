@@ -9,4 +9,12 @@
     <color name="white">#FFFFFFFF</color>
     <color name="dark_gray">#FF424242</color>
     <color name="light_gray">#bfbfbf</color>
+    <color name="lemon_meringue">#ECE4B7</color>
+    <color name="independence">#465775</color>
+    <color name="light_cyan">#CDEDF6</color>
+    <color name="byzantium">#820263</color>
+    <color name="baby_pink">#FFD4CA</color>
+    <color name="russian_violet">#330036</color>
+    <color name="dark_purple">#38182F</color>
+    <color name="english_violet">#593F62</color>
 </resources>

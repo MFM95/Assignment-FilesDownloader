@@ -2,9 +2,12 @@ package com.filedownloader.presentation.view.adapter
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.selection.ItemDetailsLookup
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filesdownloader.R
 import com.filedownloader.data.source.model.FileTypeEnum
@@ -14,8 +17,15 @@ import kotlinx.android.synthetic.main.item_file.view.*
 
 class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    init {
+        setHasStableIds(true)
+    }
+
+
     var items: ArrayList<FileItemUIModel> = arrayListOf()
     val onItemClicked = MutableLiveData<FileItemUIModel>()
+
+    var tracker: SelectionTracker<Long>? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return FileItemViewHolder(
@@ -27,7 +37,9 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is FileItemViewHolder) {
-            holder.bind(items[position], position, holder)
+            tracker?.let {
+                holder.bind(items[position], position, holder, it.isSelected(position.toLong()))
+            }
         }
     }
 
@@ -35,9 +47,14 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return items.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
     inner class FileItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         @SuppressLint("SetTextI18n")
-        fun bind(item: FileItemUIModel, position: Int, holder: FileItemViewHolder) {
+        fun bind(item: FileItemUIModel, position: Int, holder: FileItemViewHolder, isActivated: Boolean = false) {
+            itemView.isActivated = isActivated
             item.let {
                 itemView.tvFileName.text = it.fileItem.name
                 itemView.tvFileUrl.text = it.fileItem.url
@@ -73,7 +90,7 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     itemView.ivDownloadStatus.visibility = View.GONE
                     itemView.pbFileDownloadProgress.visibility = View.VISIBLE
                     itemView.tvFileDownloadProgress.visibility = View.VISIBLE
-                    itemView.pbFileDownloadProgress.progress = item.downloadProgress?: 0
+                    itemView.pbFileDownloadProgress.progress = item.downloadProgress ?: 0
                     itemView.tvFileDownloadProgress.text = "${item.downloadProgress}%"
                 }
                 DownloadState.PENDING -> {
@@ -90,7 +107,24 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 }
             }
         }
+
+        fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> =
+            object : ItemDetailsLookup.ItemDetails<Long>() {
+                override fun getPosition(): Int = bindingAdapterPosition
+                override fun getSelectionKey(): Long = itemId
+            }
     }
 
+    class MyItemDetailsLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<Long>() {
+        override fun getItemDetails(event: MotionEvent): ItemDetails<Long>? {
+            val view = recyclerView.findChildViewUnder(event.x, event.y)
+            if (view != null) {
+                return (recyclerView.getChildViewHolder(view)
+                        as FilesAdapter.FileItemViewHolder).getItemDetails()
+            }
+            return null
+
+        }
+    }
 
 }

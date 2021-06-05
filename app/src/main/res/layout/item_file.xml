@@ -6,6 +6,7 @@
     android:paddingTop="20dp"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
+    android:background="@color/rv_color_selection"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageView
