@@ -37,7 +37,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="$USER_HOME$/Downloads/play-button (1).png" />
+                                                <entry key="imagePath" value="$USER_HOME$/Downloads/iconfinder_3209297_delay_hourlass_minute_time_waiting_icon_512px.png" />
                                                 <entry key="opacityPercent" value="60" />
                                               </map>
                                             </option>
@@ -71,8 +71,8 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="$USER_HOME$/Downloads/play-button (1).png" />
-                                      <entry key="outputName" value="ic_video_file" />
+                                      <entry key="imageAsset" value="$USER_HOME$/Downloads/iconfinder_3209297_delay_hourlass_minute_time_waiting_icon_512px.png" />
+                                      <entry key="outputName" value="ic_pending" />
                                     </map>
                                   </option>
                                 </PersistentState>

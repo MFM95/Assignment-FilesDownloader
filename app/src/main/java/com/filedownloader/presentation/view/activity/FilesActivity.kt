@@ -7,11 +7,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.downloader.OnDownloadListener
 import com.downloader.PRDownloader
-import com.downloader.Status
 import com.example.filesdownloader.R
 import com.filedownloader.core.ViewModelFactory
+import com.filedownloader.presentation.uimodel.DownloadState
 import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
 import com.filedownloader.presentation.viewmodel.JsonFileViewModel
@@ -84,40 +85,53 @@ class FilesActivity : AppCompatActivity() {
             false
         )
         filesAdapter.onItemClicked.observe(this, {
-            Log.i("onItemClicked", it.fileItem.name)
-            if (PRDownloader.getStatus(0) == Status.COMPLETED) {
-
-            }
-//            val dirPath = android.os.Environment.getExternalStorageDirectory().absolutePath +
-//                    File.separator+"downloads";
+            Log.i("onItemClicked", filesAdapter.items.indexOf(it).toString())
             val dirPath = filesDir.absolutePath + File.separator + "downloads"
-
             startDownload(it.fileItem.url, dirPath, it.fileItem.name, filesAdapter.items.indexOf(it))
         })
+
+        /*** Turn off the item change animations,
+        / so that recyclerView items will be updated without any flashing/jumping,
+        ****/
+        (rvFilesList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     private fun startDownload(url: String, dirPath: String, fileName: String, position: Int) {
+        updateItemState(position, DownloadState.PENDING)
         val downloadId =
             PRDownloader.download(url, dirPath, fileName)
                 .build()
-                .setOnStartOrResumeListener { }
-                .setOnPauseListener { }
-                .setOnCancelListener { }
+                .setOnStartOrResumeListener {
+                    updateItemState(position, DownloadState.DOWNLOADING)
+                }
+                .setOnPauseListener {
+                    updateItemState(position, DownloadState.NORMAL)
+                }
+                .setOnCancelListener {
+                    updateItemState(position, DownloadState.NORMAL)
+                }
                 .setOnProgressListener {
-                    val percentage = (it.currentBytes * 100) / it.totalBytes
-                    Log.i("onItemClicked", percentage.toString())
+                    val progress = (it.currentBytes * 100) / it.totalBytes
+                    updateItemState(position, DownloadState.DOWNLOADING, progress.toInt())
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
-                        Log.i("onItemClicked", "onDownloadComplete")
+                        updateItemState(position, DownloadState.COMPLETED)
                     }
                     override fun onError(error: com.downloader.Error?) {
-                        Log.i("onItemClicked", error.toString())
+                        updateItemState(position, DownloadState.FAILED)
                     }
                 })
-
     }
 
+    private fun updateItemState(position: Int, state: DownloadState, progress: Int? = null) {
+        Log.i("updateItemState", position.toString() + " - " + state.name)
+        filesAdapter.items[position].downloadState = state
+        progress?.let {
+            filesAdapter.items[position].downloadProgress = progress
+        }
+        filesAdapter.notifyItemChanged(position)
+    }
 
     companion object {
         private const val FILE_NAME = "getListOfFilesResponse.json"
