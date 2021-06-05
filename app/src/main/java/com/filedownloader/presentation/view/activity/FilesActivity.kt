@@ -1,6 +1,8 @@
 package com.filedownloader.presentation.view.activity
 
 import android.os.Bundle
+import android.os.StrictMode
+import android.os.StrictMode.VmPolicy
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -12,13 +14,14 @@ import com.downloader.OnDownloadListener
 import com.downloader.PRDownloader
 import com.example.filesdownloader.R
 import com.filedownloader.core.ViewModelFactory
+import com.filedownloader.core.getRootDirPath
+import com.filedownloader.core.openFile
 import com.filedownloader.presentation.uimodel.DownloadState
 import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
 import com.filedownloader.presentation.viewmodel.JsonFileViewModel
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_files.*
-import java.io.File
 import javax.inject.Inject
 
 
@@ -86,9 +89,15 @@ class FilesActivity : AppCompatActivity() {
         )
         filesAdapter.onItemClicked.observe(this, {
             Log.i("onItemClicked", filesAdapter.items.indexOf(it).toString())
-            val dirPath = filesDir.absolutePath + File.separator + "downloads"
+//            val dirPath = filesDir.absolutePath + File.separator + "downloads"
+            val dirPath = getRootDirPath(it.fileItem.name)
+//            val dirPath = android.os.Environment.getExternalStorageDirectory().absolutePath +
+//                    File.separator+"downloads"
+            Log.i("onItemClicked", dirPath)
             startDownload(it.fileItem.url, dirPath, it.fileItem.name, filesAdapter.items.indexOf(it))
+
         })
+
 
         /*** Turn off the item change animations,
         / so that recyclerView items will be updated without any flashing/jumping,
@@ -106,6 +115,7 @@ class FilesActivity : AppCompatActivity() {
                 }
                 .setOnPauseListener {
                     updateItemState(position, DownloadState.NORMAL)
+
                 }
                 .setOnCancelListener {
                     updateItemState(position, DownloadState.NORMAL)
@@ -117,6 +127,7 @@ class FilesActivity : AppCompatActivity() {
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
                         updateItemState(position, DownloadState.COMPLETED)
+                        openFile(filesAdapter.items[position].fileItem.name.toString())
                     }
                     override fun onError(error: com.downloader.Error?) {
                         updateItemState(position, DownloadState.FAILED)
