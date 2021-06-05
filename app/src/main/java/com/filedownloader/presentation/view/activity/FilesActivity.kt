@@ -5,6 +5,7 @@ import android.os.StrictMode
 import android.os.StrictMode.VmPolicy
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -20,6 +21,7 @@ import com.example.filesdownloader.R
 import com.filedownloader.core.ViewModelFactory
 import com.filedownloader.core.getRootDirPath
 import com.filedownloader.core.openFile
+import com.filedownloader.core.showConfirmationDialog
 import com.filedownloader.presentation.uimodel.DownloadState
 import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
@@ -119,15 +121,24 @@ class FilesActivity : AppCompatActivity() {
     }
 
     private fun setItemClickListener() {
-        filesAdapter.onItemClicked.observe(this, {
-            Log.i("onItemClicked", filesAdapter.items.indexOf(it).toString())
+        filesAdapter.onItemClicked.observe(this, { item ->
+            Log.i("onItemClicked", filesAdapter.items.indexOf(item).toString())
 //            val dirPath = filesDir.absolutePath + File.separator + "downloads"
-            val dirPath = getRootDirPath(it.fileItem.name)
+            val dirPath = getRootDirPath(item.fileItem.name)
 //            val dirPath = android.os.Environment.getExternalStorageDirectory().absolutePath +
 //                    File.separator+"downloads"
             Log.i("onItemClicked", dirPath)
-            startDownload(it.fileItem.url, dirPath, it.fileItem.name, filesAdapter.items.indexOf(it))
 
+            showConfirmationDialog("Confirmation",
+                "Downloading will be starting now, Continue?",
+                {
+                    startDownload(
+                        item.fileItem.url,
+                        dirPath,
+                        item.fileItem.name,
+                        filesAdapter.items.indexOf(item)
+                    )
+                })
         })
     }
 

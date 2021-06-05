@@ -6,8 +6,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.example.filesdownloader.R
 import java.io.File
 import java.util.*
 
@@ -48,4 +51,34 @@ fun Activity.openFile(fileName: String) {
     startActivity(Intent.createChooser(intent, "Open folder"))
 //    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 //    startActivity(intent)
+}
+
+
+fun Activity.showConfirmationDialog(title: String, message: String, positiveBtnAction: View.OnClickListener? = null, negativeBtnAction: View.OnClickListener? = null) {
+    val alertDialog: AlertDialog = this.let {
+        val builder = AlertDialog.Builder(this, R.style.Base_Theme_AppCompat_Light_Dialog)
+        builder.apply {
+            setPositiveButton("YES") { dialog, _ ->
+                positiveBtnAction?.onClick(null)
+                dialog.dismiss()
+            }
+            setNegativeButton("NO") { dialog, _ ->
+                negativeBtnAction?.onClick(null)
+                dialog.dismiss()
+            }
+        }
+        builder.setTitle(title)
+        builder.setMessage(message)
+        builder.create()
+    }
+    alertDialog.setOnShowListener {
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.russian_violet))
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(ContextCompat.getColor(this, R.color.russian_violet))
+    }
+    alertDialog.show()
+}
+
+interface DialogClickListeners {
+    fun onPositiveButtonClick()
+    fun onNegativeButtonClick()
 }
