@@ -25,6 +25,7 @@ import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
 import com.filedownloader.presentation.view.utils.MyItemKeyProvider
 import com.filedownloader.presentation.viewmodel.FilesDownloaderViewModel
+import com.filedownloader.presentation.viewmodel.PreferencesViewModel
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_files.*
 import javax.inject.Inject
@@ -41,6 +42,13 @@ class FilesActivity : AppCompatActivity() {
             .get(FilesDownloaderViewModel::class.java)
     }
 
+    @Inject
+    lateinit var preferencesViewModelFactory: ViewModelFactory<PreferencesViewModel>
+    private val preferencesViewModel by lazy {
+        ViewModelProviders.of(this, preferencesViewModelFactory)
+            .get(PreferencesViewModel::class.java)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
@@ -51,7 +59,6 @@ class FilesActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.action_bar_menu, menu)
-        Log.i("filesSelection", "Menu")
         val downloadAction = menu?.findItem(R.id.action_download)
         downloadAction?.isVisible = !filesDownloaderViewModel.selectedFiles.value.isNullOrEmpty()
         return true
@@ -63,7 +70,6 @@ class FilesActivity : AppCompatActivity() {
                 filesDownloaderViewModel.selectedFiles.value?.let { selectedFiles ->
                     /*** to download files in order  **/
                     selectedFiles.sort()
-
                     for (fileIndex in selectedFiles) {
                         val fileItem = filesAdapter.items[fileIndex.toInt()].fileItem
                         startDownload(fileItem.url, getRootDirPath(fileItem.name), fileItem.name, fileIndex.toInt())
@@ -92,6 +98,13 @@ class FilesActivity : AppCompatActivity() {
             showLoading(false)
             it?.let {
                 filesAdapter.items = it.mapFileItemToUIModel()
+                filesAdapter.items.forEach { item ->
+                    if (preferencesViewModel.isFileDownloaded(item.fileItem.id.toString())) {
+                        item.downloadState = DownloadState.COMPLETED
+                    } else {
+                        item.downloadState = DownloadState.NORMAL
+                    }
+                }
                 filesAdapter.notifyDataSetChanged()
             }
         })
@@ -156,21 +169,26 @@ class FilesActivity : AppCompatActivity() {
 //            val dirPath = android.os.Environment.getExternalStorageDirectory().absolutePath +
 //                    File.separator+"downloads"
             Log.i("onItemClicked", dirPath)
-
-            showConfirmationDialog("Confirmation",
-                "Downloading will be starting now, Continue?",
-                {
-                    startDownload(
-                        item.fileItem.url,
-                        dirPath,
-                        item.fileItem.name,
-                        filesAdapter.items.indexOf(item)
-                    )
-                })
+            if (preferencesViewModel.isFileDownloaded(item.fileItem.id.toString())) {
+                // TODO
+            } else {
+                showConfirmationDialog("Confirmation",
+                    "Downloading will be starting now, Continue?",
+                    {
+                        startDownload(
+                            item.fileItem.url,
+                            dirPath,
+                            item.fileItem.name,
+                            filesAdapter.items.indexOf(item)
+                        )
+                    })
+            }
         })
     }
 
     private fun startDownload(url: String, dirPath: String, fileName: String, position: Int) {
+        if (preferencesViewModel.isFileDownloaded(filesAdapter.items[position].fileItem.id.toString()))
+            return
         updateItemState(position, DownloadState.PENDING)
         val downloadId =
             PRDownloader.download(url, dirPath, fileName)
@@ -192,6 +210,7 @@ class FilesActivity : AppCompatActivity() {
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
                         updateItemState(position, DownloadState.COMPLETED)
+                        preferencesViewModel.saveDownloadedFileID(filesAdapter.items[position].fileItem.id.toString())
 //                        openFile(filesAdapter.items[position].fileItem.name.toString())
                     }
                     override fun onError(error: com.downloader.Error?) {
