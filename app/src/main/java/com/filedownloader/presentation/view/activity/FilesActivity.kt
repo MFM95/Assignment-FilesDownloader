@@ -60,7 +60,15 @@ class FilesActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.action_download -> {
-                Log.i("onOptionsItem", "action_download")
+                filesDownloaderViewModel.selectedFiles.value?.let { selectedFiles ->
+                    /*** to download files in order  **/
+                    selectedFiles.sort()
+
+                    for (fileIndex in selectedFiles) {
+                        val fileItem = filesAdapter.items[fileIndex.toInt()].fileItem
+                        startDownload(fileItem.url, getRootDirPath(fileItem.name), fileItem.name, fileIndex.toInt())
+                    }
+                }
             }
         }
 

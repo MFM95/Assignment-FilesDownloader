@@ -21,7 +21,6 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         setHasStableIds(true)
     }
 
-
     var items: ArrayList<FileItemUIModel> = arrayListOf()
     val onItemClicked = MutableLiveData<FileItemUIModel>()
 
