@@ -5,7 +5,6 @@ import com.filedownloader.core.BaseViewModel
 import com.filedownloader.data.source.model.FileItem
 import com.filedownloader.domain.interactor.ParseJsonFileUseCase
 import com.filedownloader.domain.interactor.ReadFileUseCase
-import com.filedownloader.presentation.viewmodel.JsonFileViewModel_Factory.create
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.addTo
@@ -16,7 +15,7 @@ import java.net.HttpURLConnection
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class JsonFileViewModel @Inject constructor(
+class FilesDownloaderViewModel @Inject constructor(
     private val readFileUseCase: ReadFileUseCase,
     private val parseJsonFileUseCase: ParseJsonFileUseCase
 ) :
@@ -24,6 +23,8 @@ class JsonFileViewModel @Inject constructor(
 
     val filesLiveData by lazy { MutableLiveData<ArrayList<FileItem>>() }
     val errorLiveData by lazy { MutableLiveData<Throwable>() }
+
+    val selectedFiles by lazy { MutableLiveData<ArrayList<Long>>() }
 
     fun readFile(fileName: String) {
         readFileUseCase.readFile(fileName)

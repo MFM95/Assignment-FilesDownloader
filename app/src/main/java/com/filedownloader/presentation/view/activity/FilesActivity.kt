@@ -1,17 +1,15 @@
 package com.filedownloader.presentation.view.activity
 
 import android.os.Bundle
-import android.os.StrictMode
-import android.os.StrictMode.VmPolicy
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.selection.StableIdKeyProvider
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -26,7 +24,7 @@ import com.filedownloader.presentation.uimodel.DownloadState
 import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
 import com.filedownloader.presentation.view.utils.MyItemKeyProvider
-import com.filedownloader.presentation.viewmodel.JsonFileViewModel
+import com.filedownloader.presentation.viewmodel.FilesDownloaderViewModel
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_files.*
 import javax.inject.Inject
@@ -37,10 +35,10 @@ class FilesActivity : AppCompatActivity() {
     private lateinit var filesAdapter: FilesAdapter
 
     @Inject
-    lateinit var jsonFileViewModelFactory: ViewModelFactory<JsonFileViewModel>
-    private val jsonFileViewModel by lazy {
-        ViewModelProviders.of(this, jsonFileViewModelFactory)
-            .get(JsonFileViewModel::class.java)
+    lateinit var filesDownloaderViewModelFactory: ViewModelFactory<FilesDownloaderViewModel>
+    private val filesDownloaderViewModel by lazy {
+        ViewModelProviders.of(this, filesDownloaderViewModelFactory)
+            .get(FilesDownloaderViewModel::class.java)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,19 +48,39 @@ class FilesActivity : AppCompatActivity() {
         init()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.action_bar_menu, menu)
+        Log.i("filesSelection", "Menu")
+        val downloadAction = menu?.findItem(R.id.action_download)
+        downloadAction?.isVisible = !filesDownloaderViewModel.selectedFiles.value.isNullOrEmpty()
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.action_download -> {
+                Log.i("onOptionsItem", "action_download")
+            }
+        }
+
+        return true
+    }
+
     private fun init () {
         setUpRecyclerView()
         getFiles()
         observeOnFiles()
+        observeOnFilesSelection()
     }
 
     private fun getFiles() {
         showLoading(true)
-        jsonFileViewModel.readFile(FILE_NAME)
+        filesDownloaderViewModel.readFile(FILE_NAME)
     }
 
     private fun observeOnFiles() {
-        jsonFileViewModel.filesLiveData.observe(this, Observer {
+        filesDownloaderViewModel.filesLiveData.observe(this, Observer {
             showLoading(false)
             it?.let {
                 filesAdapter.items = it.mapFileItemToUIModel()
@@ -70,7 +88,7 @@ class FilesActivity : AppCompatActivity() {
             }
         })
 
-        jsonFileViewModel.errorLiveData.observe(this, Observer {
+        filesDownloaderViewModel.errorLiveData.observe(this, Observer {
             showLoading(false)
         })
     }
@@ -115,6 +133,8 @@ class FilesActivity : AppCompatActivity() {
                 override fun onSelectionChanged() {
                     super.onSelectionChanged()
                     Log.i("onSelectionChanged", tracker.selection.size().toString())
+                    filesDownloaderViewModel.selectedFiles.value = ArrayList()
+                    filesDownloaderViewModel.selectedFiles.value?.addAll(tracker.selection)
                 }
             }
         )
@@ -181,6 +201,14 @@ class FilesActivity : AppCompatActivity() {
         filesAdapter.notifyItemChanged(position)
     }
 
+    private fun observeOnFilesSelection() {
+        filesDownloaderViewModel.selectedFiles.observe(this, Observer {
+            it?.let {
+                Log.i("filesSelection", "observe")
+                invalidateOptionsMenu()
+            }
+        })
+    }
     companion object {
         private const val FILE_NAME = "getListOfFilesResponse.json"
     }
