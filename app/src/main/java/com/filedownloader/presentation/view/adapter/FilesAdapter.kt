@@ -59,9 +59,9 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 itemView.tvFileName.text = it.fileItem.name
                 itemView.tvFileUrl.text = it.fileItem.url
                 if (it.fileItem.type == FileTypeEnum.VIDEO)
-                    itemView.ivFileType.setImageResource(R.drawable.ic_video_file)
+                    itemView.ivFileType.setImageResource(R.drawable.ic_video2)
                 else
-                    itemView.ivFileType.setImageResource(R.drawable.ic_pdf_file)
+                    itemView.ivFileType.setImageResource(R.drawable.ic_pdf)
             }
 
             if (position == items.size - 1) {
@@ -84,7 +84,7 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     itemView.pbFileDownloadProgress.visibility = View.GONE
                     itemView.tvFileDownloadProgress.visibility = View.GONE
                     itemView.ivDownloadStatus.visibility = View.VISIBLE
-                    itemView.ivDownloadStatus.setImageResource(R.drawable.ic_completed)
+                    itemView.ivDownloadStatus.setImageResource(R.drawable.ic_done)
                 }
                 DownloadState.DOWNLOADING -> {
                     itemView.ivDownloadStatus.visibility = View.GONE
@@ -103,7 +103,7 @@ class FilesAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     itemView.pbFileDownloadProgress.visibility = View.GONE
                     itemView.tvFileDownloadProgress.visibility = View.GONE
                     itemView.ivDownloadStatus.visibility = View.VISIBLE
-                    itemView.ivDownloadStatus.setImageResource(R.drawable.ic_failed)
+                    itemView.ivDownloadStatus.setImageResource(R.drawable.ic_error)
                 }
             }
         }

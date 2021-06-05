@@ -184,7 +184,7 @@ class FilesActivity : AppCompatActivity() {
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
                         updateItemState(position, DownloadState.COMPLETED)
-                        openFile(filesAdapter.items[position].fileItem.name.toString())
+//                        openFile(filesAdapter.items[position].fileItem.name.toString())
                     }
                     override fun onError(error: com.downloader.Error?) {
                         updateItemState(position, DownloadState.FAILED)
