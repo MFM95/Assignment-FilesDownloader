@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.example.filesdownloader.R
+import com.filedownloader.data.source.model.FileTypeEnum
 import java.io.File
 import java.util.*
 
@@ -26,31 +27,25 @@ fun Activity.getRootDirPath(fileName: String): String {
     } else {
         this.applicationContext.filesDir.absolutePath
     }
-
-
-//    val direct = File(Environment.getExternalStorageDirectory().toString() + "/DirName")
-//
-//    if (!direct.exists()) {
-//        val wallpaperDirectory = File("/sdcard/DirName/")
-//        wallpaperDirectory.mkdirs()
-//    }
-//    val file = File("/sdcard/DirName/", fileName)
-//
-//    return file.absolutePath
 }
 
-
-fun Activity.openFile(fileName: String) {
+fun Activity.openFile(fileName: String, fileType: FileTypeEnum) {
     val intent = Intent(Intent.ACTION_VIEW)
-
-//    val uri = Uri.parse(File(Environment.getExternalStorageDirectory().path + fileName).toString())
-    val uri = Uri.fromFile(File(Environment.getExternalStorageDirectory(),fileName))
-//    val uri = FileProvider.getUriForFile(this, this.applicationContext.packageName + ".provider", File(fileName))
-    Log.i("openFile", uri.path?: "XX")
-    intent.setDataAndType(uri, "video/*")
+    val rootPath = "storage/emulated/0/Android/data/com.example.filesdownloader/files/"
+    val uri = Uri.parse(rootPath + fileName)
+    when (fileType) {
+        FileTypeEnum.PDF -> {
+            intent.setDataAndType(uri, "application/pdf")
+        }
+        FileTypeEnum.VIDEO -> {
+            intent.setDataAndType(uri, "video/*")
+        }
+        else -> {
+            intent.setDataAndType(uri, "*/*")
+        }
+    }
+    Log.i("openFile", uri.path.toString())
     startActivity(Intent.createChooser(intent, "Open folder"))
-//    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//    startActivity(intent)
 }
 
 
@@ -76,9 +71,4 @@ fun Activity.showConfirmationDialog(title: String, message: String, positiveBtnA
         alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(ContextCompat.getColor(this, R.color.russian_violet))
     }
     alertDialog.show()
-}
-
-interface DialogClickListeners {
-    fun onPositiveButtonClick()
-    fun onNegativeButtonClick()
 }

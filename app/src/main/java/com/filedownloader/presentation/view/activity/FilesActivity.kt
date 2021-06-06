@@ -165,7 +165,7 @@ class FilesActivity : AppCompatActivity() {
             Log.i("onItemClicked", dirPath)
             when (item.downloadState) {
                 DownloadState.COMPLETED -> {
-                    // TODO open files
+                    openFile(item.fileItem.name, item.fileItem.type)
                 }
                 DownloadState.DOWNLOADING, DownloadState.PENDING -> {
                 }
@@ -219,7 +219,7 @@ class FilesActivity : AppCompatActivity() {
                         filesAdapter.items[position].numberOfFailures = 0
                         updateItemState(position, DownloadState.COMPLETED)
                         preferencesViewModel.saveDownloadedFileID(filesAdapter.items[position].fileItem.id.toString())
-//                        openFile(filesAdapter.items[position].fileItem.name.toString())
+                        openFile(filesAdapter.items[position].fileItem.name, filesAdapter.items[position].fileItem.type)
                     }
 
                     override fun onError(error: com.downloader.Error?) {
