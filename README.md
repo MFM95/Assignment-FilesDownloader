@@ -5,4 +5,4 @@
 - Kotlin
 
 
-# The branch (develop) is used for develpoment and then merged into branch (master).
+- The branch (develop) is used for develpoment and then merged into branch (master).
