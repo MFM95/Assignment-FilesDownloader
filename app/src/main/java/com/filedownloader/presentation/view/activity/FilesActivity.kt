@@ -163,34 +163,39 @@ class FilesActivity : AppCompatActivity() {
 
     private fun setItemClickListener() {
         filesAdapter.onItemClicked.observe(this, { item ->
-            Log.i("onItemClicked", filesAdapter.items.indexOf(item).toString())
-//            val dirPath = filesDir.absolutePath + File.separator + "downloads"
             val dirPath = getRootDirPath(item.fileItem.name)
-//            val dirPath = android.os.Environment.getExternalStorageDirectory().absolutePath +
-//                    File.separator+"downloads"
             Log.i("onItemClicked", dirPath)
-            if (preferencesViewModel.isFileDownloaded(item.fileItem.id.toString())) {
-                // TODO
-            } else {
-                showConfirmationDialog("Confirmation",
-                    "Downloading will be starting now, Continue?",
-                    {
-                        startDownload(
-                            item.fileItem.url,
-                            dirPath,
-                            item.fileItem.name,
-                            filesAdapter.items.indexOf(item)
-                        )
-                    })
+            when (item.downloadState) {
+                DownloadState.COMPLETED -> {
+                    // TODO open files
+                }
+                DownloadState.DOWNLOADING, DownloadState.PENDING -> {
+                    // NOTHING
+                }
+                else -> {
+                    showConfirmationDialog(getString(R.string.confirmation_title),
+                        getString(R.string.confirmation_message),
+                        {
+                            startDownload(
+                                item.fileItem.url,
+                                dirPath,
+                                item.fileItem.name,
+                                filesAdapter.items.indexOf(item)
+                            )
+                        })
+                }
             }
         })
     }
 
     private fun startDownload(url: String, dirPath: String, fileName: String, position: Int) {
-        if (preferencesViewModel.isFileDownloaded(filesAdapter.items[position].fileItem.id.toString()))
+        if (filesAdapter.items[position].downloadState == DownloadState.COMPLETED
+            || filesAdapter.items[position].downloadState == DownloadState.DOWNLOADING
+            || filesAdapter.items[position].downloadState == DownloadState.PENDING
+        )
             return
         updateItemState(position, DownloadState.PENDING)
-        val downloadId =
+        filesAdapter.items[position].downloadId =
             PRDownloader.download(url, dirPath, fileName)
                 .build()
                 .setOnStartOrResumeListener {
@@ -208,7 +213,10 @@ class FilesActivity : AppCompatActivity() {
                     if (it.totalBytes < 0L) {
                         progress = (it.currentBytes * 100L) / 10000000
                     }
-                    Log.i("setOnProgressListener", it.currentBytes.toString() + " - " + it.totalBytes.toString() + " - " + progress.toString())
+                    Log.i(
+                        "setOnProgressListener",
+                        it.currentBytes.toString() + " - " + it.totalBytes.toString() + " - " + progress.toString()
+                    )
                     updateItemState(position, DownloadState.DOWNLOADING, progress)
                 }
                 .start(object : OnDownloadListener {
@@ -217,6 +225,7 @@ class FilesActivity : AppCompatActivity() {
                         preferencesViewModel.saveDownloadedFileID(filesAdapter.items[position].fileItem.id.toString())
 //                        openFile(filesAdapter.items[position].fileItem.name.toString())
                     }
+
                     override fun onError(error: com.downloader.Error?) {
                         updateItemState(position, DownloadState.FAILED)
                     }

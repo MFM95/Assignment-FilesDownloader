@@ -7,4 +7,5 @@ data class FileItemUIModel(
 ) {
     var downloadState: DownloadState? = null
     var downloadProgress: Int? = 0
+    var downloadId: Int? = null
 }

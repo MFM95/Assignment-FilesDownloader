@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Files Downloader</string>
+    <string name="confirmation_title">Confirmation</string>
+    <string name="confirmation_message">Downloading will be starting now, Continue?</string>
 </resources>
