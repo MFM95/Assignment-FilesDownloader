@@ -77,7 +77,6 @@ class FilesActivity : AppCompatActivity() {
                 }
             }
         }
-
         return true
     }
 
@@ -153,7 +152,6 @@ class FilesActivity : AppCompatActivity() {
             object : SelectionTracker.SelectionObserver<Long>() {
                 override fun onSelectionChanged() {
                     super.onSelectionChanged()
-                    Log.i("onSelectionChanged", tracker.selection.size().toString())
                     filesDownloaderViewModel.selectedFiles.value = ArrayList()
                     filesDownloaderViewModel.selectedFiles.value?.addAll(tracker.selection)
                 }
@@ -170,7 +168,6 @@ class FilesActivity : AppCompatActivity() {
                     // TODO open files
                 }
                 DownloadState.DOWNLOADING, DownloadState.PENDING -> {
-                    // NOTHING
                 }
                 else -> {
                     showConfirmationDialog(getString(R.string.confirmation_title),
@@ -202,10 +199,12 @@ class FilesActivity : AppCompatActivity() {
                     updateItemState(position, DownloadState.DOWNLOADING)
                 }
                 .setOnPauseListener {
+                    filesAdapter.items[position].numberOfFailures = 0
                     updateItemState(position, DownloadState.NORMAL)
 
                 }
                 .setOnCancelListener {
+                    filesAdapter.items[position].numberOfFailures = 0
                     updateItemState(position, DownloadState.NORMAL)
                 }
                 .setOnProgressListener {
@@ -213,27 +212,23 @@ class FilesActivity : AppCompatActivity() {
                     if (it.totalBytes < 0L) {
                         progress = (it.currentBytes * 100L) / 10000000
                     }
-                    Log.i(
-                        "setOnProgressListener",
-                        it.currentBytes.toString() + " - " + it.totalBytes.toString() + " - " + progress.toString()
-                    )
                     updateItemState(position, DownloadState.DOWNLOADING, progress)
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
+                        filesAdapter.items[position].numberOfFailures = 0
                         updateItemState(position, DownloadState.COMPLETED)
                         preferencesViewModel.saveDownloadedFileID(filesAdapter.items[position].fileItem.id.toString())
 //                        openFile(filesAdapter.items[position].fileItem.name.toString())
                     }
 
                     override fun onError(error: com.downloader.Error?) {
-                        updateItemState(position, DownloadState.FAILED)
+                        handleErrors(url, dirPath, fileName, position)
                     }
                 })
     }
 
     private fun updateItemState(position: Int, state: DownloadState, progress: Long? = null) {
-        Log.i("updateItemState", position.toString() + " - " + state.name)
         filesAdapter.items[position].downloadState = state
         progress?.let {
             if (progress in 0..100) {
@@ -243,10 +238,22 @@ class FilesActivity : AppCompatActivity() {
         filesAdapter.notifyItemChanged(position)
     }
 
+    private fun handleErrors(url: String, dirPath: String, fileName: String, position: Int) {
+        /*** Retry 3 times then display error state **/
+
+        if(filesAdapter.items[position].numberOfFailures < 4) {
+            filesAdapter.items[position].numberOfFailures++
+            filesAdapter.items[position].downloadState = DownloadState.NORMAL
+            startDownload(url, dirPath, fileName, position)
+        } else {
+            filesAdapter.items[position].numberOfFailures = 0
+            updateItemState(position, DownloadState.FAILED)
+        }
+    }
+
     private fun observeOnFilesSelection() {
         filesDownloaderViewModel.selectedFiles.observe(this, Observer {
             it?.let {
-                Log.i("filesSelection", "observe")
                 invalidateOptionsMenu()
             }
         })
