@@ -204,8 +204,12 @@ class FilesActivity : AppCompatActivity() {
                     updateItemState(position, DownloadState.NORMAL)
                 }
                 .setOnProgressListener {
-                    val progress = (it.currentBytes * 100) / it.totalBytes
-                    updateItemState(position, DownloadState.DOWNLOADING, progress.toInt())
+                    var progress = (it.currentBytes * 100) / it.totalBytes
+                    if (it.totalBytes < 0L) {
+                        progress = (it.currentBytes * 100L) / 10000000
+                    }
+                    Log.i("setOnProgressListener", it.currentBytes.toString() + " - " + it.totalBytes.toString() + " - " + progress.toString())
+                    updateItemState(position, DownloadState.DOWNLOADING, progress)
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
@@ -219,11 +223,13 @@ class FilesActivity : AppCompatActivity() {
                 })
     }
 
-    private fun updateItemState(position: Int, state: DownloadState, progress: Int? = null) {
+    private fun updateItemState(position: Int, state: DownloadState, progress: Long? = null) {
         Log.i("updateItemState", position.toString() + " - " + state.name)
         filesAdapter.items[position].downloadState = state
         progress?.let {
-            filesAdapter.items[position].downloadProgress = progress
+            if (progress in 0..100) {
+                filesAdapter.items[position].downloadProgress = progress.toInt()
+            }
         }
         filesAdapter.notifyItemChanged(position)
     }
