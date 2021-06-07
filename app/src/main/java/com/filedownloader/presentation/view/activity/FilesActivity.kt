@@ -60,7 +60,7 @@ class FilesActivity : AppCompatActivity() {
                     selectedFiles.sort()
                     for (fileIndex in selectedFiles) {
                         val fileItem = filesDownloaderViewModel.filesAdapter.items[fileIndex.toInt()].fileItem
-                        filesDownloaderViewModel.startDownload(fileItem.url, getRootDirPath(fileItem.name), fileItem.name, fileIndex.toInt())
+                        filesDownloaderViewModel.startDownload(fileItem.url, getRootDirPath(), fileItem.name, fileIndex.toInt())
                     }
                 }
             }
@@ -149,7 +149,7 @@ class FilesActivity : AppCompatActivity() {
 
     private fun setItemClickListener() {
         filesDownloaderViewModel.filesAdapter.onItemClicked.observe(this, { item ->
-            val dirPath = getRootDirPath(item.fileItem.name)
+            val dirPath = getRootDirPath()
             Log.i("onItemClicked", dirPath)
             when (item.downloadState) {
                 DownloadState.COMPLETED -> {

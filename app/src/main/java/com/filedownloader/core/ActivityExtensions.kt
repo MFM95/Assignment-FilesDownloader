@@ -17,7 +17,7 @@ import java.util.*
 
 
 @SuppressLint("SdCardPath")
-fun Activity.getRootDirPath(fileName: String): String {
+fun Activity.getRootDirPath(): String {
     return if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
         val file: File = ContextCompat.getExternalFilesDirs(
             this.applicationContext,
