@@ -17,7 +17,6 @@ import javax.inject.Singleton
         ActivityBuilder::class
     ])
 interface AppComponent {
-//    fun inject(app: Application)
     fun inject(app: FileDownloaderApplication)
 
     @Component.Builder

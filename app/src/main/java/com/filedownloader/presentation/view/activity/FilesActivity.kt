@@ -13,8 +13,6 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.downloader.OnDownloadListener
-import com.downloader.PRDownloader
 import com.example.filesdownloader.R
 import com.filedownloader.core.ViewModelFactory
 import com.filedownloader.core.getRootDirPath
@@ -25,7 +23,6 @@ import com.filedownloader.presentation.uimodel.mapFileItemToUIModel
 import com.filedownloader.presentation.view.adapter.FilesAdapter
 import com.filedownloader.presentation.view.utils.MyItemKeyProvider
 import com.filedownloader.presentation.viewmodel.FilesDownloaderViewModel
-import com.filedownloader.presentation.viewmodel.PreferencesViewModel
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_files.*
 import javax.inject.Inject
@@ -33,20 +30,11 @@ import javax.inject.Inject
 
 class FilesActivity : AppCompatActivity() {
 
-    private lateinit var filesAdapter: FilesAdapter
-
     @Inject
     lateinit var filesDownloaderViewModelFactory: ViewModelFactory<FilesDownloaderViewModel>
     private val filesDownloaderViewModel by lazy {
         ViewModelProviders.of(this, filesDownloaderViewModelFactory)
             .get(FilesDownloaderViewModel::class.java)
-    }
-
-    @Inject
-    lateinit var preferencesViewModelFactory: ViewModelFactory<PreferencesViewModel>
-    private val preferencesViewModel by lazy {
-        ViewModelProviders.of(this, preferencesViewModelFactory)
-            .get(PreferencesViewModel::class.java)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,8 +59,8 @@ class FilesActivity : AppCompatActivity() {
                     /*** to download files in order  **/
                     selectedFiles.sort()
                     for (fileIndex in selectedFiles) {
-                        val fileItem = filesAdapter.items[fileIndex.toInt()].fileItem
-                        startDownload(fileItem.url, getRootDirPath(fileItem.name), fileItem.name, fileIndex.toInt())
+                        val fileItem = filesDownloaderViewModel.filesAdapter.items[fileIndex.toInt()].fileItem
+                        filesDownloaderViewModel.startDownload(fileItem.url, getRootDirPath(), fileItem.name, fileIndex.toInt())
                     }
                 }
             }
@@ -93,18 +81,18 @@ class FilesActivity : AppCompatActivity() {
     }
 
     private fun observeOnFiles() {
-        filesDownloaderViewModel.filesLiveData.observe(this, Observer {
+        filesDownloaderViewModel.filesLiveData.observe(this, {
             showLoading(false)
             it?.let {
-                filesAdapter.items = it.mapFileItemToUIModel()
-                filesAdapter.items.forEach { item ->
-                    if (preferencesViewModel.isFileDownloaded(item.fileItem.id.toString())) {
+                filesDownloaderViewModel.filesAdapter.items = it.mapFileItemToUIModel()
+                filesDownloaderViewModel.filesAdapter.items.forEach { item ->
+                    if (filesDownloaderViewModel.isFileDownloaded(item.fileItem.id.toString())) {
                         item.downloadState = DownloadState.COMPLETED
                     } else {
                         item.downloadState = DownloadState.NORMAL
                     }
                 }
-                filesAdapter.notifyDataSetChanged()
+                filesDownloaderViewModel.filesAdapter.notifyDataSetChanged()
             }
         })
 
@@ -125,8 +113,8 @@ class FilesActivity : AppCompatActivity() {
     }
 
     private fun setUpRecyclerView() {
-        filesAdapter = FilesAdapter()
-        rvFilesList.adapter = filesAdapter
+        filesDownloaderViewModel.filesAdapter = FilesAdapter()
+        rvFilesList.adapter = filesDownloaderViewModel.filesAdapter
         rvFilesList.layoutManager = LinearLayoutManager(
             this,
             LinearLayoutManager.VERTICAL,
@@ -147,7 +135,7 @@ class FilesActivity : AppCompatActivity() {
         ).withSelectionPredicate(
             SelectionPredicates.createSelectAnything()
         ).build()
-        filesAdapter.tracker = tracker
+        filesDownloaderViewModel.filesAdapter.tracker = tracker
         tracker.addObserver(
             object : SelectionTracker.SelectionObserver<Long>() {
                 override fun onSelectionChanged() {
@@ -160,8 +148,8 @@ class FilesActivity : AppCompatActivity() {
     }
 
     private fun setItemClickListener() {
-        filesAdapter.onItemClicked.observe(this, { item ->
-            val dirPath = getRootDirPath(item.fileItem.name)
+        filesDownloaderViewModel.filesAdapter.onItemClicked.observe(this, { item ->
+            val dirPath = getRootDirPath()
             Log.i("onItemClicked", dirPath)
             when (item.downloadState) {
                 DownloadState.COMPLETED -> {
@@ -173,11 +161,11 @@ class FilesActivity : AppCompatActivity() {
                     showConfirmationDialog(getString(R.string.confirmation_title),
                         getString(R.string.confirmation_message),
                         {
-                            startDownload(
+                            filesDownloaderViewModel.startDownload(
                                 item.fileItem.url,
                                 dirPath,
                                 item.fileItem.name,
-                                filesAdapter.items.indexOf(item)
+                                filesDownloaderViewModel.filesAdapter.items.indexOf(item)
                             )
                         })
                 }
@@ -185,71 +173,7 @@ class FilesActivity : AppCompatActivity() {
         })
     }
 
-    private fun startDownload(url: String, dirPath: String, fileName: String, position: Int) {
-        if (filesAdapter.items[position].downloadState == DownloadState.COMPLETED
-            || filesAdapter.items[position].downloadState == DownloadState.DOWNLOADING
-            || filesAdapter.items[position].downloadState == DownloadState.PENDING
-        )
-            return
-        updateItemState(position, DownloadState.PENDING)
-        filesAdapter.items[position].downloadId =
-            PRDownloader.download(url, dirPath, fileName)
-                .build()
-                .setOnStartOrResumeListener {
-                    updateItemState(position, DownloadState.DOWNLOADING)
-                }
-                .setOnPauseListener {
-                    filesAdapter.items[position].numberOfFailures = 0
-                    updateItemState(position, DownloadState.NORMAL)
 
-                }
-                .setOnCancelListener {
-                    filesAdapter.items[position].numberOfFailures = 0
-                    updateItemState(position, DownloadState.NORMAL)
-                }
-                .setOnProgressListener {
-                    var progress = (it.currentBytes * 100) / it.totalBytes
-                    if (it.totalBytes < 0L) {
-                        progress = (it.currentBytes * 100L) / 10000000
-                    }
-                    updateItemState(position, DownloadState.DOWNLOADING, progress)
-                }
-                .start(object : OnDownloadListener {
-                    override fun onDownloadComplete() {
-                        filesAdapter.items[position].numberOfFailures = 0
-                        updateItemState(position, DownloadState.COMPLETED)
-                        preferencesViewModel.saveDownloadedFileID(filesAdapter.items[position].fileItem.id.toString())
-                        openFile(filesAdapter.items[position].fileItem.name, filesAdapter.items[position].fileItem.type)
-                    }
-
-                    override fun onError(error: com.downloader.Error?) {
-                        handleErrors(url, dirPath, fileName, position)
-                    }
-                })
-    }
-
-    private fun updateItemState(position: Int, state: DownloadState, progress: Long? = null) {
-        filesAdapter.items[position].downloadState = state
-        progress?.let {
-            if (progress in 0..100) {
-                filesAdapter.items[position].downloadProgress = progress.toInt()
-            }
-        }
-        filesAdapter.notifyItemChanged(position)
-    }
-
-    private fun handleErrors(url: String, dirPath: String, fileName: String, position: Int) {
-        /*** Retry 3 times then display error state **/
-
-        if(filesAdapter.items[position].numberOfFailures < 4) {
-            filesAdapter.items[position].numberOfFailures++
-            filesAdapter.items[position].downloadState = DownloadState.NORMAL
-            startDownload(url, dirPath, fileName, position)
-        } else {
-            filesAdapter.items[position].numberOfFailures = 0
-            updateItemState(position, DownloadState.FAILED)
-        }
-    }
 
     private fun observeOnFilesSelection() {
         filesDownloaderViewModel.selectedFiles.observe(this, Observer {

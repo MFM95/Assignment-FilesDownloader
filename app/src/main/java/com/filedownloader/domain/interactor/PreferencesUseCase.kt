@@ -1,12 +1,10 @@
-package com.filedownloader.presentation.viewmodel
+package com.filedownloader.domain.interactor
 
 import android.content.SharedPreferences
-import com.filedownloader.core.BaseViewModel
 import com.filedownloader.core.di.PreferenceInfo
 import javax.inject.Inject
 
-class PreferencesViewModel @Inject constructor(@PreferenceInfo private val sharedPreferences: SharedPreferences) :
-    BaseViewModel() {
+class PreferencesUseCase @Inject constructor(@PreferenceInfo private val sharedPreferences: SharedPreferences) {
 
     fun saveDownloadedFileID(id: String) {
         var list = getDownloadedFilesIDs()
@@ -26,10 +24,11 @@ class PreferencesViewModel @Inject constructor(@PreferenceInfo private val share
     }
 
     fun isFileDownloaded(id: String): Boolean {
-        return getDownloadedFilesIDs()?.contains(id)?: false
+        return getDownloadedFilesIDs()?.contains(id) ?: false
     }
 
     companion object {
         private const val KEY_FILES_LIST = "key_files_list"
     }
+
 }
